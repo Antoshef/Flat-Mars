@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
     "moduleResolution": "Node",
-    "target": "ES2022",
     "jsx": "react",
     "strictNullChecks": true,
     "strictFunctionTypes": true

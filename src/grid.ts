@@ -3,12 +3,31 @@ enum CommandsEnum {
   LEFT = "L",
   RIGHT = "R",
 }
+
 type IScent = {
   posX: number;
   posY: number;
   orientation: number;
 };
+
 type IOrientation = "N" | "E" | "S" | "W";
+
+interface IRobot {
+  name: number;
+  posX: number;
+  posY: number;
+  orientation: number;
+  commands: CommandsEnum[];
+  isLost: boolean;
+  moveForward: () => void;
+  turnLeft: () => void;
+  turnRight: () => void;
+  printResult: () => void;
+}
+
+type ICoordinates = {
+  orientation: string;
+} & Pick<IRobot, "posX" | "posY">;
 
 class Grid {
   xAxis: number;
@@ -42,25 +61,45 @@ class Grid {
   }
 }
 
-interface IRobot {
-  name: number;
-  posX: number;
-  posY: number;
-  orientation: number;
-  commands: string[];
-  isLost: boolean;
-}
-
 class Robot implements IRobot {
   name: number;
   posX: number;
   posY: number;
   orientation: number;
-  commands: string[];
+  commands: CommandsEnum[];
   isLost: boolean;
   constructor(name = 0, posX = 0, posY = 0, orientation = 0, isLost = false) {
     (this.name = name), (this.isLost = isLost);
     (this.posX = posX), (this.posY = posY), (this.orientation = orientation);
+  }
+
+  static validateCoordinates(input: string) {
+    const coordinateRegEx = /^[\d]{1,2}\s[\d]{1,2}\s[N,E,S,W]$/;
+    if (coordinateRegEx.test(input)) {
+      const [posX, posY, orientation] = input.split(" ");
+      return { posX, posY, orientation };
+    } else {
+      throw new Error("Invalid input coordinates!");
+    }
+  }
+
+  static validateCommands(input: string) {
+    const commandRegEx = /^[L,R,F]{1,100}$/;
+    if (commandRegEx.test(input)) {
+      return input.split("");
+    } else {
+      throw new Error("Invalid input commands!");
+    }
+  }
+
+  setCoordinates({ posX, posY, orientation }: ICoordinates) {
+    this.posX = Number(posX);
+    this.posY = Number(posY);
+    this.orientation = Robot.orientationConverter(orientation);
+  }
+
+  setCommands(input: string[]) {
+    this.commands = input as CommandsEnum[];
   }
 
   static orientationConverter(value: string): number {
@@ -105,44 +144,95 @@ class Robot implements IRobot {
         throw new Error("Invalid orientation!");
     }
   }
+
+  printResult() {
+    const result = this.isLost
+      ? `${this.name} ${this.posX} ${
+          this.posY
+        } ${Robot.reverseOrientationConverter(this.orientation)} L`
+      : `${this.name} ${this.posX} ${
+          this.posY
+        } ${Robot.reverseOrientationConverter(this.orientation)}`;
+    console.log(result);
+  }
 }
 
-// Initialize robots by amount of commands
-const initRobots = (commands: string[]): IRobot[] => {
-  const coordinateRegEx = /^[\d]{1,2}\s[\d]{1,2}\s[N,E,S,W]$/;
-  const commandRegEx = /^[L,R,F]{1,100}$/;
-  const returnValue: IRobot[] = [];
-
-  for (let i = 0; i < commands.length; ) {
-    if (!commands[i]) break;
-    const isCoorValid = coordinateRegEx.test(commands[i]);
-    const isCommValid = commandRegEx.test(commands[i + 1]);
-
-    if (isCoorValid && isCommValid) {
-      const [axisX, axisY, orientation] = commands[i].split(" ");
-      const robot: IRobot = {
-        name: (i % 3) + 1,
-        posX: Number(axisX),
-        posY: Number(axisY),
-        orientation: Robot.orientationConverter(orientation),
-        commands: commands[i + 1].split(""),
-        isLost: false,
-      };
-      returnValue.push(robot);
-      i += 2;
+// Define initial robots
+const defineRobots = (input: string[]) => {
+  let robots: IRobot[] = [];
+  while (input.length) {
+    const { posX, posY, orientation } = Robot.validateCoordinates(
+      input.shift()
+    );
+    const commands = Robot.validateCommands(input.shift());
+    const InitialRobot = new Robot();
+    InitialRobot.setCoordinates({
+      posX: Number(posX),
+      posY: Number(posY),
+      orientation,
+    });
+    InitialRobot.setCommands(commands);
+    InitialRobot.name = robots.length + 1;
+    robots.push(InitialRobot);
+    if (!input.length || input.shift().length === 0) {
+      continue;
     } else {
-      throw new Error("Commands are invalid!");
-    }
-    if (commands[i] != undefined && !commands[i].length) {
-      i++;
+      throw new Error("Missing divider between robot initialization!");
     }
   }
-  return returnValue;
+  return robots;
 };
 
 // Run main function
 function MartianRobots(commands: string[]): void {
-  
+  if (!commands.length) return;
+  const mapCoordinates = commands.shift()!;
+  const [axisX, axisY] = mapCoordinates.split(" ");
+  const Mars = new Grid(Number(axisX), Number(axisY));
+
+  const Robots = defineRobots(commands);
+  for (const CurrentRobot of Robots) {
+    for (const command of CurrentRobot.commands) {
+      switch (command) {
+        case CommandsEnum.FORWARD:
+          const posX = Number(CurrentRobot.posX);
+          const posY = Number(CurrentRobot.posY);
+          const scentFound = Mars.checkScents({
+            posX,
+            posY,
+            orientation: CurrentRobot.orientation,
+          });
+          if (!scentFound) {
+            CurrentRobot.moveForward();
+            const isPresent = Mars.isPresent(
+              CurrentRobot.posX,
+              CurrentRobot.posY
+            );
+            if (!isPresent) {
+              CurrentRobot.posX = posX;
+              CurrentRobot.posY = posY;
+              Mars.leaveScent({
+                posX,
+                posY,
+                orientation: CurrentRobot.orientation,
+              });
+              CurrentRobot.isLost = true;
+            }
+          }
+          break;
+        case CommandsEnum.LEFT:
+          CurrentRobot.turnLeft();
+          break;
+        case CommandsEnum.RIGHT:
+          CurrentRobot.turnRight();
+          break;
+        default:
+          break;
+      }
+      if (CurrentRobot.isLost) break;
+    }
+    CurrentRobot.printResult();
+  }
 }
 
 const sampleInput = [

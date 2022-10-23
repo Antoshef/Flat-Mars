@@ -42,6 +42,34 @@ var Robot = /** @class */ (function () {
         (this.name = name), (this.isLost = isLost);
         (this.posX = posX), (this.posY = posY), (this.orientation = orientation);
     }
+    Robot.validateCoordinates = function (input) {
+        var coordinateRegEx = /^[\d]{1,2}\s[\d]{1,2}\s[N,E,S,W]$/;
+        if (coordinateRegEx.test(input)) {
+            var _a = input.split(" "), posX = _a[0], posY = _a[1], orientation_1 = _a[2];
+            return { posX: posX, posY: posY, orientation: orientation_1 };
+        }
+        else {
+            throw new Error("Invalid input coordinates!");
+        }
+    };
+    Robot.validateCommands = function (input) {
+        var commandRegEx = /^[L,R,F]{1,100}$/;
+        if (commandRegEx.test(input)) {
+            return input.split(" ");
+        }
+        else {
+            throw new Error("Invalid input commands!");
+        }
+    };
+    Robot.prototype.setCoordinates = function (_a) {
+        var posX = _a.posX, posY = _a.posY, orientation = _a.orientation;
+        this.posX = Number(posX);
+        this.posY = Number(posY);
+        this.orientation = Robot.orientationConverter(orientation);
+    };
+    Robot.prototype.setCommands = function (input) {
+        this.commands = input;
+    };
     Robot.orientationConverter = function (value) {
         if ("NESW".indexOf(value) != -1) {
             return "NESW".indexOf(value);
@@ -82,42 +110,88 @@ var Robot = /** @class */ (function () {
                 throw new Error("Invalid orientation!");
         }
     };
+    Robot.prototype.printResult = function () {
+        var result = this.isLost
+            ? "".concat(this.name, " ").concat(this.posX, " ").concat(this.posY, " ").concat(Robot.reverseOrientationConverter(this.orientation), " L")
+            : "".concat(this.name, " ").concat(this.posX, " ").concat(this.posY, " ").concat(Robot.reverseOrientationConverter(this.orientation));
+        console.log(result);
+    };
     return Robot;
 }());
-// Initialize robots by amount of commands
-var initRobots = function (commands) {
-    var coordinateRegEx = /^[\d]{1,2}\s[\d]{1,2}\s[N,E,S,W]$/;
-    var commandRegEx = /^[L,R,F]{1,100}$/;
-    var returnValue = [];
-    for (var i = 0; i < commands.length;) {
-        if (!commands[i])
-            break;
-        var isCoorValid = coordinateRegEx.test(commands[i]);
-        var isCommValid = commandRegEx.test(commands[i + 1]);
-        if (isCoorValid && isCommValid) {
-            var _a = commands[i].split(" "), axisX = _a[0], axisY = _a[1], orientation_1 = _a[2];
-            var robot = {
-                name: (i % 3) + 1,
-                posX: Number(axisX),
-                posY: Number(axisY),
-                orientation: Robot.orientationConverter(orientation_1),
-                commands: commands[i + 1].split(""),
-                isLost: false
-            };
-            returnValue.push(robot);
-            i += 2;
+// Define initial robots
+var defineRobots = function (input) {
+    var robots = [];
+    while (input.length) {
+        var _a = Robot.validateCoordinates(input.shift()), posX = _a.posX, posY = _a.posY, orientation_2 = _a.orientation;
+        var commands = Robot.validateCommands(input.shift());
+        var InitialRobot = new Robot();
+        InitialRobot.setCoordinates({
+            posX: Number(posX),
+            posY: Number(posY),
+            orientation: orientation_2
+        });
+        InitialRobot.setCommands(commands);
+        InitialRobot.name = robots.length + 1;
+        robots.push(InitialRobot);
+        if (input.length && input.shift().length === 0) {
+            continue;
         }
         else {
-            throw new Error("Commands are invalid!");
-        }
-        if (commands[i] != undefined && !commands[i].length) {
-            i++;
+            throw new Error("Missing divider between robot initialization!");
         }
     }
-    return returnValue;
+    return robots;
 };
 // Run main function
 function MartianRobots(commands) {
+    if (!commands.length)
+        return;
+    var mapCoordinates = commands.shift();
+    var _a = mapCoordinates.split(" "), axisX = _a[0], axisY = _a[1];
+    var Mars = new Grid(Number(axisX), Number(axisY));
+    var Robots = defineRobots(commands);
+    for (var _i = 0, Robots_1 = Robots; _i < Robots_1.length; _i++) {
+        var CurrentRobot = Robots_1[_i];
+        for (var _b = 0, _c = CurrentRobot.commands; _b < _c.length; _b++) {
+            var command = _c[_b];
+            switch (command) {
+                case CommandsEnum.FORWARD:
+                    var posX = Number(CurrentRobot.posX);
+                    var posY = Number(CurrentRobot.posY);
+                    var scentFound = Mars.checkScents({
+                        posX: posX,
+                        posY: posY,
+                        orientation: CurrentRobot.orientation
+                    });
+                    if (!scentFound) {
+                        CurrentRobot.moveForward();
+                        var isPresent = Mars.isPresent(CurrentRobot.posX, CurrentRobot.posY);
+                        if (!isPresent) {
+                            CurrentRobot.posX = posX;
+                            CurrentRobot.posY = posY;
+                            Mars.leaveScent({
+                                posX: posX,
+                                posY: posY,
+                                orientation: CurrentRobot.orientation
+                            });
+                            CurrentRobot.isLost = true;
+                        }
+                    }
+                    break;
+                case CommandsEnum.LEFT:
+                    CurrentRobot.turnLeft();
+                    break;
+                case CommandsEnum.RIGHT:
+                    CurrentRobot.turnRight();
+                    break;
+                default:
+                    break;
+            }
+            if (CurrentRobot.isLost)
+                break;
+        }
+        CurrentRobot.printResult();
+    }
 }
 var sampleInput = [
     "5 3",
