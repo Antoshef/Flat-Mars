@@ -30,8 +30,23 @@ var Grid = /** @class */ (function () {
             return false;
         }
     };
+    Grid.prototype.initRobot = function (posX, posY) {
+        if (posX < 0 || posX > this.xAxis || posY < 0 || posY > this.yAxis) {
+            throw new Error("Can't initializa a robot outside of the grid area!");
+        }
+    };
     return Grid;
 }());
+/**
+ * Initialize a robot
+ * @param name Robot's name
+ * @param posX current robot's position at xAxis
+ * @param posY current robot's position at yAxis
+ * @param orientation (N, S, E, W)
+ * @param commands a set of instruction "L", "R" and "F"
+ * @param isLost boolean set to true if a robot is lost
+ * @callback validateCoordinates validates the robot input coordinates
+ */
 var Robot = /** @class */ (function () {
     function Robot(name, posX, posY, orientation, isLost) {
         if (name === void 0) { name = 0; }
@@ -44,9 +59,11 @@ var Robot = /** @class */ (function () {
     }
     Robot.validateCoordinates = function (input) {
         var coordinateRegEx = /^[\d]{1,2}\s[\d]{1,2}\s[N,E,S,W]$/;
-        if (coordinateRegEx.test(input)) {
-            var _a = input.split(" "), posX = _a[0], posY = _a[1], orientation_1 = _a[2];
-            return { posX: posX, posY: posY, orientation: orientation_1 };
+        var _a = input.split(" "), posX = _a[0], posY = _a[1], orientation = _a[2];
+        if (coordinateRegEx.test(input) &&
+            Number(posX) <= 50 &&
+            Number(posY) <= 50) {
+            return { posX: posX, posY: posY, orientation: orientation };
         }
         else {
             throw new Error("Invalid input coordinates!");
@@ -55,7 +72,7 @@ var Robot = /** @class */ (function () {
     Robot.validateCommands = function (input) {
         var commandRegEx = /^[L,R,F]{1,100}$/;
         if (commandRegEx.test(input)) {
-            return input.split(" ");
+            return input.split("");
         }
         else {
             throw new Error("Invalid input commands!");
@@ -122,18 +139,18 @@ var Robot = /** @class */ (function () {
 var defineRobots = function (input) {
     var robots = [];
     while (input.length) {
-        var _a = Robot.validateCoordinates(input.shift()), posX = _a.posX, posY = _a.posY, orientation_2 = _a.orientation;
+        var _a = Robot.validateCoordinates(input.shift()), posX = _a.posX, posY = _a.posY, orientation_1 = _a.orientation;
         var commands = Robot.validateCommands(input.shift());
         var InitialRobot = new Robot();
         InitialRobot.setCoordinates({
             posX: Number(posX),
             posY: Number(posY),
-            orientation: orientation_2
+            orientation: orientation_1
         });
         InitialRobot.setCommands(commands);
         InitialRobot.name = robots.length + 1;
         robots.push(InitialRobot);
-        if (input.length && input.shift().length === 0) {
+        if (!input.length || input.shift().length === 0) {
             continue;
         }
         else {
@@ -152,6 +169,7 @@ function MartianRobots(commands) {
     var Robots = defineRobots(commands);
     for (var _i = 0, Robots_1 = Robots; _i < Robots_1.length; _i++) {
         var CurrentRobot = Robots_1[_i];
+        Mars.initRobot(CurrentRobot.posX, CurrentRobot.posY);
         for (var _b = 0, _c = CurrentRobot.commands; _b < _c.length; _b++) {
             var command = _c[_b];
             switch (command) {
@@ -193,7 +211,7 @@ function MartianRobots(commands) {
         CurrentRobot.printResult();
     }
 }
-var sampleInput = [
+var inputOne = [
     "5 3",
     "1 1 E",
     "RFRFRFRF",
@@ -204,4 +222,18 @@ var sampleInput = [
     "0 3 W",
     "LLFFFLFLFL",
 ];
-MartianRobots(sampleInput);
+var inputTwo = [
+    "2 2",
+    "0 0 N",
+    "FLFLFRF",
+    "",
+    "0 0 N",
+    "FLFFFRFF",
+    "",
+    "0 0 N",
+    "FLFFFRFFRFF",
+];
+console.log("Init 1");
+MartianRobots(inputOne);
+console.log("\nInit 2");
+MartianRobots(inputTwo);

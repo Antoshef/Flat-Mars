@@ -59,8 +59,24 @@ class Grid {
       return false;
     }
   }
+
+  initRobot(posX: number, posY: number) {
+    if (posX < 0 || posX > this.xAxis || posY < 0 || posY > this.yAxis) {
+      throw new Error("Can't initializa a robot outside of the grid area!");
+    }
+  }
 }
 
+/**
+ * Initialize a robot
+ * @param name Robot's name
+ * @param posX current robot's position at xAxis
+ * @param posY current robot's position at yAxis
+ * @param orientation (N, S, E, W)
+ * @param commands a set of instruction "L", "R" and "F"
+ * @param isLost boolean set to true if a robot is lost
+ * @callback validateCoordinates validates the robot input coordinates
+ */
 class Robot implements IRobot {
   name: number;
   posX: number;
@@ -75,8 +91,12 @@ class Robot implements IRobot {
 
   static validateCoordinates(input: string) {
     const coordinateRegEx = /^[\d]{1,2}\s[\d]{1,2}\s[N,E,S,W]$/;
-    if (coordinateRegEx.test(input)) {
-      const [posX, posY, orientation] = input.split(" ");
+    const [posX, posY, orientation] = input.split(" ");
+    if (
+      coordinateRegEx.test(input) &&
+      Number(posX) <= 50 &&
+      Number(posY) <= 50
+    ) {
       return { posX, posY, orientation };
     } else {
       throw new Error("Invalid input coordinates!");
@@ -192,6 +212,7 @@ function MartianRobots(commands: string[]): void {
 
   const Robots = defineRobots(commands);
   for (const CurrentRobot of Robots) {
+    Mars.initRobot(CurrentRobot.posX, CurrentRobot.posY);
     for (const command of CurrentRobot.commands) {
       switch (command) {
         case CommandsEnum.FORWARD:
@@ -235,7 +256,7 @@ function MartianRobots(commands: string[]): void {
   }
 }
 
-const sampleInput = [
+const inputOne = [
   "5 3",
   "1 1 E",
   "RFRFRFRF",
@@ -247,4 +268,19 @@ const sampleInput = [
   "LLFFFLFLFL",
 ];
 
-MartianRobots(sampleInput);
+const inputTwo = [
+  "2 2",
+  "0 0 N",
+  "FLFLFRF",
+  "",
+  "0 0 N",
+  "FLFFFRFF",
+  "",
+  "0 0 N",
+  "FLFFFRFFRFF",
+];
+
+console.log("Init 1");
+MartianRobots(inputOne);
+console.log("\nInit 2");
+MartianRobots(inputTwo);

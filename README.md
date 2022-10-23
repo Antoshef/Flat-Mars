@@ -41,6 +41,10 @@ All instruction strings will be less than 100 characters in length.
 For each robot position/instruction in the input, the output should indicate the final grid position and orientation of the robot. If a robot falls off
 the edge of the grid the word “LOST” should be printed after the position and orientation.
 
+# Start Program
+
+Run npm run start or yarn start run the script
+
 # Sample Input
 
 1 5 3

@@ -32,8 +32,10 @@ class Robot {
     }
     static validateCoordinates(input) {
         const coordinateRegEx = /^[\d]{1,2}\s[\d]{1,2}\s[N,E,S,W]$/;
-        if (coordinateRegEx.test(input)) {
-            const [posX, posY, orientation] = input.split(" ");
+        const [posX, posY, orientation] = input.split(" ");
+        if (coordinateRegEx.test(input) &&
+            Number(posX) <= 50 &&
+            Number(posY) <= 50) {
             return { posX, posY, orientation };
         }
         else {
@@ -177,16 +179,17 @@ function MartianRobots(commands) {
         CurrentRobot.printResult();
     }
 }
-const sampleInput = [
-    "5 3",
-    "1 1 E",
-    "RFRFRFRF",
-    "",
-    "3 2 N",
-    "FRRFLLFFRRFLL",
-    "",
-    "0 3 W",
-    "LLFFFLFLFL",
-];
+// const sampleInput = [
+//   "5 3",
+//   "1 1 E",
+//   "RFRFRFRF",
+//   "",
+//   "3 2 N",
+//   "FRRFLLFFRRFLL",
+//   "",
+//   "0 3 W",
+//   "LLFFFLFLFL",
+// ];
+const sampleInput = ["2 2", "50 3 E", "RFRFRFRF"];
 MartianRobots(sampleInput);
 //# sourceMappingURL=grid.js.map
