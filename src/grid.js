@@ -84,6 +84,38 @@ var Robot = /** @class */ (function () {
     };
     return Robot;
 }());
+// Initialize robots by amount of commands
+var initRobots = function (commands) {
+    var coordinateRegEx = /^[\d]{1,2}\s[\d]{1,2}\s[N,E,S,W]$/;
+    var commandRegEx = /^[L,R,F]{1,100}$/;
+    var returnValue = [];
+    for (var i = 0; i < commands.length;) {
+        if (!commands[i])
+            break;
+        var isCoorValid = coordinateRegEx.test(commands[i]);
+        var isCommValid = commandRegEx.test(commands[i + 1]);
+        if (isCoorValid && isCommValid) {
+            var _a = commands[i].split(" "), axisX = _a[0], axisY = _a[1], orientation_1 = _a[2];
+            var robot = {
+                name: (i % 3) + 1,
+                posX: Number(axisX),
+                posY: Number(axisY),
+                orientation: Robot.orientationConverter(orientation_1),
+                commands: commands[i + 1].split(""),
+                isLost: false
+            };
+            returnValue.push(robot);
+            i += 2;
+        }
+        else {
+            throw new Error("Commands are invalid!");
+        }
+        if (commands[i] != undefined && !commands[i].length) {
+            i++;
+        }
+    }
+    return returnValue;
+};
 // Run main function
 function MartianRobots(commands) {
 }

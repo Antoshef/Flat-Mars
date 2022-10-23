@@ -107,6 +107,39 @@ class Robot implements IRobot {
   }
 }
 
+// Initialize robots by amount of commands
+const initRobots = (commands: string[]): IRobot[] => {
+  const coordinateRegEx = /^[\d]{1,2}\s[\d]{1,2}\s[N,E,S,W]$/;
+  const commandRegEx = /^[L,R,F]{1,100}$/;
+  const returnValue: IRobot[] = [];
+
+  for (let i = 0; i < commands.length; ) {
+    if (!commands[i]) break;
+    const isCoorValid = coordinateRegEx.test(commands[i]);
+    const isCommValid = commandRegEx.test(commands[i + 1]);
+
+    if (isCoorValid && isCommValid) {
+      const [axisX, axisY, orientation] = commands[i].split(" ");
+      const robot: IRobot = {
+        name: (i % 3) + 1,
+        posX: Number(axisX),
+        posY: Number(axisY),
+        orientation: Robot.orientationConverter(orientation),
+        commands: commands[i + 1].split(""),
+        isLost: false,
+      };
+      returnValue.push(robot);
+      i += 2;
+    } else {
+      throw new Error("Commands are invalid!");
+    }
+    if (commands[i] != undefined && !commands[i].length) {
+      i++;
+    }
+  }
+  return returnValue;
+};
+
 // Run main function
 function MartianRobots(commands: string[]): void {
   
