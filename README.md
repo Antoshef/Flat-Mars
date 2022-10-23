@@ -1,7 +1,7 @@
-# Flat-Mars
 # Martian Robots
 
 # Introduction
+
 Don’t spend more than 2 hours on this. If you don’t complete the challenge in the allotted time, you will not be penalised. But note down
 what subsequent steps you would code with more time.
 Use any variation of Javascript for the challenge
@@ -11,6 +11,7 @@ Submit commit history, as we can see how you logically tackled the problem
 Include steps on how to execute the code. You can assume we have the most recent LTS version of node, npm and yarn installed.
 
 # Problem
+
 The surface of Mars can be modelled by a rectangular grid around which robots are able to move according to instructions provided from
 Earth. You are to write a program that determines each sequence of robot positions and reports the final position of the robot.
 A robot position consists of a grid coordinate (a pair of integers: x-coordinate followed by y-coordinate) and an orientation (N, S, E, W for
@@ -26,6 +27,7 @@ the last grid position the robot occupied before disappearing over the edge. An 
 which a robot has been previously lost is simply ignored by the current robot.
 
 # The input
+
 The first line of input is the upper-right coordinates of the rectangular world, the lower-left coordinates are assumed to be 0, 0.
 The remaining input consists of a sequence of robot positions and instructions (two lines per robot). A position consists of two integers
 specifying the initial coordinates of the robot and an orientation (N, S, E, W), all separated by whitespace on one line. A robot instruction is
@@ -35,10 +37,12 @@ The maximum value for any coordinate is 50.
 All instruction strings will be less than 100 characters in length.
 
 # The output
+
 For each robot position/instruction in the input, the output should indicate the final grid position and orientation of the robot. If a robot falls off
 the edge of the grid the word “LOST” should be printed after the position and orientation.
 
 # Sample Input
+
 1 5 3
 2 1 1 E
 3 RFRFRFRF
@@ -50,6 +54,7 @@ the edge of the grid the word “LOST” should be printed after the position an
 9 LLFFFLFLFL
 
 # Sample Output
+
 1 1 1 E
 2 3 3 N LOST
 3 2 3 S
